@@ -2,6 +2,8 @@
 
 This is a copy of DBM's "THE GAMEBOX TIMEWASTING SYSTEM" an ATARI DOS BINARY FILE loader menu intended to load games in DOS 2.0 BINARY FILE format.
 
+<img width="2104" height="1762" alt="Screenshot_24-Jan_14-35-12_4875" src="https://github.com/user-attachments/assets/b0151565-1288-4a89-87bd-0befe8c7c70e" />
+
 ## Features:
 
 * Small, loads at $0700 and stays under $1000
