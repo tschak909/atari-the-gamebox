@@ -11,7 +11,7 @@
             rts
             iny
             sty BOOT            ; Reset boot flag
-            jsr L08D9           ; Set INITAD to $F00F? (why?)
+            jsr L08D9           ; Set INITAD
 
             lda #$01            ; hold on to $01 for AUX2
             pha
@@ -280,9 +280,7 @@ DEFINIT     rts
 
 L08D6       jmp (INITAD)
 
-        ;; Reset INIT to an RTS address
-        ;; This is an RTS in OSB, but needs to be
-        ;; changed.
+        ;; Reset INIT to an address with an RTS instruction.
 
 L08D9       lda #.lo(DEFINIT)
             sta INITAD
