@@ -8,7 +8,7 @@ This is a copy of DBM's "THE GAMEBOX TIMEWASTING SYSTEM" an ATARI DOS BINARY FIL
 
 * Small, loads at $0700 and stays under $1000
 * 16 character titles with spaces, stored at sectors 366 to 368.
-* Ability to obscure the directory listing in DOS 2.0
+* Ability to obscure the directory listing in DOS 2.0 (this does not work as it wipes out the starting sector values)
 * Versions with different warning messages
 
 ## Things that could be improved:
@@ -18,7 +18,8 @@ This is a copy of DBM's "THE GAMEBOX TIMEWASTING SYSTEM" an ATARI DOS BINARY FIL
 
 ## What was fixed
 
-Initially, GAMEBOX would only run under ATARI 400/800 OS Revision B, due to directly accessing the KGETCH routine at $F6F4. The fix was to append a bit of code that grabs the appropriate KGETCH routine from the publicly documented vector handler, so that this can run on any ATARI 8-bit system. See the GETK routine at the bottom for details.
+* Change call to $F6F4 (part-way into KGETCH on ATARI 400/800 OS) to use official GETCH vectors in CIO.
+* Change routine that initializes INITAD to use an address inside the menu that points to an RTS intead of a random RTS in the 400/800 OS.
 
 ## Building
 
@@ -57,5 +58,3 @@ Added file "disk/GBOX1.OBJ"
 Added file "disk/GBOX2.OBJ"
 created image "GAMEBOX.atr"
 ```
-
-
