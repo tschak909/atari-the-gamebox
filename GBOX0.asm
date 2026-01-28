@@ -1,4 +1,4 @@
-; 
+;
             icl 'GBOX0.inc'
 ;
 ; Start of code
@@ -6,79 +6,101 @@
             org $0700
 ;
             ldy #$00
-            sty COLDST
+            sty COLDST          ; Clear coldstart flag
             clc
             rts
             iny
-            sty BOOT
-            jsr L08D9
-            lda #$01
+            sty BOOT            ; Reset boot flag
+            jsr L08D9           ; Set INITAD to $F00F? (why?)
+
+            lda #$01            ; hold on to $01 for AUX2
             pha
-            ldx #$60
-            lda #$0C
+
+        ;; Close screen, to re-open
+
+            ldx #$60            ; IOCB Channel #6
+            lda #$0C            ; CIO CLOSE command
+            sta IOCB0+ICCOM,X   ; Set command
+            jsr CIOV            ; Call CIOV
+
+        ;; Open screen again (GRAPHICS 1 + 16)
+
+            ldx #$60            ; IOCB channel #6
+            lda #$03            ; CIO OPEN command
             sta IOCB0+ICCOM,X
-            jsr CIOV
-            ldx #$60
-            lda #$03
-            sta IOCB0+ICCOM,X
-            lda #$62
+            lda #.lo(SDEV)      ; Buffer at $0962
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(SDEV)
             sta IOCB0+ICBAH,X
-            pla
-            sta IOCB0+ICAX2,X
+            pla                 ; Fetch the $01 from above
+            sta IOCB0+ICAX2,X   ; Set to ICAX2 (AUX2) (to set GRAPHICS 1)
             lda #$08
-            sta IOCB0+ICAX1,X
-            jsr CIOV
-            lda #$09
-            ldx #$60
-            sta IOCB0+ICCOM,X
-            jsr L07FD
-            lda #$64
+            sta IOCB0+ICAX1,X   ; Set ICAX1 to $08 (WRITE)
+            jsr CIOV            ; Call CIOV
+
+        ;; Place <*> the game box <*> title.
+
+            lda #$09            ; $09 = PUT RECORD
+            ldx #$60            ; IOCB Channel #6
+            sta IOCB0+ICCOM,X   ; Set PUT RECORD into command
+            jsr L07FD           ; Set Buffer length to 255 bytes (EOL will stop it)
+            lda #.lo(TITLE)     ; Set Buffer to $0964
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(TITLE)
             sta IOCB0+ICBAH,X
-            jsr CIOV
-            lda #$79
+            jsr CIOV            ; Call CIOV to put to screen.
+
+        ;; Place the SELECT NUMBER prompt at bottom.
+
+            lda #.lo(SELECT)    ; SELECT NUMBER prompt at $0979
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(SELECT)
             sta IOCB0+ICBAH,X
-            lda #$17
+            lda #$17            ; set S: row to 23 ($17)
             sta ROWCRS
-            jsr CIOV
-            jsr L0808
-            jsr L07EE
-            ldy #$04
-            lda (L0090),Y
-            clc
-            adc #$3C
-            sta DBUFLO
-            iny
-            lda (L0090),Y
+            jsr CIOV            ; Call CIOV
+
+            jsr L0808           ; Set up SIOV to read into buffer at END
+
+            jsr L07EE           ; Preserve shadow display list
+
+        ;;  Load Title sector 1 ($016E) into display area
+
+            ldy #$04            ; Scoot to LMS
+            lda (L0090),Y       ; Load low byte of display area from dlist
+            clc                 ; Clear carry
+            adc #$3C            ; Add 60 (3 lines down)
+            sta DBUFLO          ; Store into destination buffer address (LO)
+            iny                 ; Increment and
+            lda (L0090),Y       ; Get high byte of display area from dlist
             adc #$00
-            sta DBUFHI
-            lda #$6E
-            sta DAUX1
-            lda #$01
-            sta DAUX2
-            lda #$03
+            sta DBUFHI          ; store into destination buffer address (HI)
+            lda #$6E            ; Sector $016E
+            sta DAUX1           ; Into DAUX1 and DAUX2
+            lda #$01            ;
+            sta DAUX2           ;
+            lda #$03            ; set 3 as sector counter into $D0
             sta L00D0
-L0785       jsr DSKINV
-            inc DAUX1
-            lda DBUFLO
-            clc
-            adc #$78
-            sta DBUFLO
-            lda DBUFHI
-            adc #$00
-            sta DBUFHI
-            dec L00D0
-            bne L0785
-            jsr L07EE
-            inc L0091
-            ldy #$C3
-            lda (L0090),Y
-            sta L0088
+L0785       jsr DSKINV          ; And call resident disk routine
+
+        ;; Load next title sector ($016F+) into next display chunk
+
+            inc DAUX1           ; Next sector
+            lda DBUFLO          ; Get buffer address
+            clc                 ;
+            adc #$78            ; Add $78 (120)
+            sta DBUFLO          ; to low buffer address
+            lda DBUFHI          ; Increment DBUFHI if needed
+            adc #$00            ;
+            sta DBUFHI          ;
+            dec L00D0           ; Decrement sector counter
+            bne L0785           ; Repeat call to resident disk routine if not done.
+
+            jsr L07EE           ; Fetch display list address into $90
+            inc L0091           ; Increment high byte
+            ldy #$C3            ; 195 bytes
+            lda (L0090),Y       ; Fetch
+            sta L0088           ; Store in $88
             lda #$00
             sta (L0090),Y
             lda #$00
@@ -97,7 +119,7 @@ L07C4       jsr L07F9
             lda CH
             cmp #$FF
             beq L07B9
-            jsr GETK 
+            jsr GETK
             sec
             sbc #$31
             bcc L07B9
@@ -110,30 +132,41 @@ L07C4       jsr L07F9
             lda #$CA
             sta COLOR1
             bne L0821
+
+        ;; Save shadow display list ptr at ZP $(90)
+
 L07EE       lda SDLSTL
             sta L0090
             lda SDLSTH
             sta L0091
             rts
+
 L07F9       dex
             bne L07F9
             rts
-L07FD       lda #$FF
-            sta IOCB0+ICBLL,X
-            lda #$00
-            sta IOCB0+ICBLH,X
+
+        ;; Set Buffer Length of IOCB X to 255 bytes
+L07FD       lda #$FF            ; $FF = 255
+            sta IOCB0+ICBLL,X   ; Set buffer length low
+            lda #$00            ; $00
+            sta IOCB0+ICBLH,X   ; Buffer Length High
             rts
-L0808       lda #$01
+
+        ;; Set up for SIO 'R'ead from D1:
+        ;; into buffer at END
+
+L0808       lda #$01            ; Unit 1
             sta DUNIT
-            lda #$52
+            lda #$52            ; 'R'ead command
             sta DCOMND
-            lda #$09
-            sta L0091
+            lda #.hi(END)            ; Set destination buffer to END
+            sta L0091           ; And keep a copy in ZP ($90) for indexing
             sta DBUFHI
-            lda #$8A
+            lda #.lo(END)
             sta L0090
             sta DBUFLO
             rts
+
 L0821       jsr L0808
             lda #$69
             sta DAUX1
@@ -296,9 +329,10 @@ L095C       iny
             cpy #$14
             bne L0933
             rts
-            .byte 'S:<*> the game box <*>'
+SDEV        .byte 'S:'
+TITLE       .byte '<*> the game box <*>'
             .byte $9B
-            .byte '   SELECT NUMBER'
+SELECT      .byte '   SELECT NUMBER'
             .byte $9B
 GETK	    LDA $E425
 	    PHA
@@ -306,4 +340,5 @@ GETK	    LDA $E425
 	    PHA
 	    RTS
 ;
-         
+
+END
