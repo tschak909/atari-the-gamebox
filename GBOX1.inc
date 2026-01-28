@@ -62,12 +62,11 @@ CIOV        equ $E456
 ;
 ; Code equates
 ;
-L0088       equ $0088
-L0090       equ $0090
-L0091       equ $0091
-L00CC       equ $00CC
-L00CD       equ $00CD
-L00CE       equ $00CE
-L00CF       equ $00CF
-L00D0       equ $00D0
-LF6F4       equ $F6F4
+MAXGAMES       equ $0088
+TARGETBUF       equ $0090
+TARGETBUFH       equ $0091
+TARGET_ADDR       equ $00CC
+TARGET_ADDRH       equ $00CD
+ENDADDRL       equ $00CE
+ENDADDRH       equ $00CF
+CNTLEN       equ $00D0

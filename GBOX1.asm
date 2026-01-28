@@ -23,9 +23,9 @@
             jsr L082B
             lda #$09
             sta IOCB0+ICCOM,X
-            lda #$90
+            lda #.lo(WARNING)
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(WARNING)
             sta IOCB0+ICBAH,X
             jsr CIOV
             lda #$FF
@@ -41,9 +41,9 @@ L073B       lda #$01
             ldx #$60
             lda #$03
             sta IOCB0+ICCOM,X
-            lda #$BA
+            lda #.lo(SDEV)
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(SDEV)
             sta IOCB0+ICBAH,X
             pla
             sta IOCB0+ICAX2,X
@@ -54,14 +54,14 @@ L073B       lda #$01
             ldx #$60
             sta IOCB0+ICCOM,X
             jsr L082B
-            lda #$BC
+            lda #.lo(TITLE)
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(TITLE)
             sta IOCB0+ICBAH,X
             jsr CIOV
-            lda #$D1
+            lda #.lo(SELECT)
             sta IOCB0+ICBAL,X
-            lda #$09
+            lda #.hi(SELECT)
             sta IOCB0+ICBAH,X
             lda #$17
             sta ROWCRS
@@ -69,12 +69,12 @@ L073B       lda #$01
             jsr L0836
             jsr L081C
             ldy #$04
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             clc
             adc #$3C
             sta DBUFLO
             iny
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             adc #$00
             sta DBUFHI
             lda #$6E
@@ -82,7 +82,7 @@ L073B       lda #$01
             lda #$01
             sta DAUX2
             lda #$03
-            sta L00D0
+            sta CNTLEN
 L07B3       jsr DSKINV
             inc DAUX1
             lda DBUFLO
@@ -92,22 +92,22 @@ L07B3       jsr DSKINV
             lda DBUFHI
             adc #$00
             sta DBUFHI
-            dec L00D0
+            dec CNTLEN
             bne L07B3
             jsr L081C
-            inc L0091
+            inc TARGETBUFH
             ldy #$C3
-            lda (L0090),Y
-            sta L0088
+            lda (TARGETBUF),Y
+            sta MAXGAMES
             lda #$00
-            sta (L0090),Y
+            sta (TARGETBUF),Y
             lda #$00
             sta AUDCTL
             tax
             dex
             stx CH
-L07E7       inc L00D0
-            lda L00D0
+L07E7       inc CNTLEN
+            lda CNTLEN
             and #$F6
             sta COLOR1
             ldy #$28
@@ -121,9 +121,9 @@ L07F2       jsr L0827
             sec
             sbc #$31
             bcc L07E7
-            cmp L0088
+            cmp MAXGAMES
             bcs L07E7
-            sta L0088
+            sta MAXGAMES
             jsr L0943
             lda #$FF
             sta CH
@@ -131,9 +131,9 @@ L07F2       jsr L0827
             sta COLOR1
             bne L084F
 L081C       lda SDLSTL
-            sta L0090
+            sta TARGETBUF
             lda SDLSTH
-            sta L0091
+            sta TARGETBUFH
             rts
 L0827       dex
             bne L0827
@@ -147,11 +147,11 @@ L0836       lda #$01
             sta DUNIT
             lda #$52
             sta DCOMND
-            lda #$09
-            sta L0091
+            lda #.hi(END)
+            sta TARGETBUFH
             sta DBUFHI
-            lda #$E2
-            sta L0090
+            lda #.lo(END)
+            sta TARGETBUF
             sta DBUFLO
             rts
 L084F       jsr L0836
@@ -160,7 +160,7 @@ L084F       jsr L0836
             lda #$01
             sta DAUX2
             lda #$02
-            sta L00D0
+            sta CNTLEN
 L0860       jsr DSKINV
             inc DAUX1
             lda DBUFLO
@@ -170,25 +170,25 @@ L0860       jsr DSKINV
             lda DBUFHI
             adc #$00
             sta DBUFHI
-            dec L00D0
+            dec CNTLEN
             bne L0860
-            lda L0088
+            lda MAXGAMES
             tay
             beq L0890
 L0880       clc
-            lda L0090
+            lda TARGETBUF
             adc #$10
-            sta L0090
-            lda L0091
+            sta TARGETBUF
+            lda TARGETBUFH
             adc #$00
-            sta L0091
+            sta TARGETBUFH
             dey
             bne L0880
 L0890       ldy #$03
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             sta DAUX1
             iny
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             sta DAUX2
             jsr L0836
             jsr DSKINV
@@ -198,34 +198,34 @@ L0890       ldy #$03
 L08AA       jsr DSKINV
             ldy #$00
 L08AF       jsr L0938
-L08B2       lda (L0090),Y
+L08B2       lda (TARGETBUF),Y
             iny
-            sty L0088
+            sty MAXGAMES
             ldy #$00
-            sta (L00CC),Y
-            ldy L0088
+            sta (TARGET_ADDR),Y
+            ldy MAXGAMES
             clc
-            inc L00CC
+            inc TARGET_ADDR
             bne L08C4
-            inc L00CD
-L08C4       lda L00CF
-            cmp L00CD
+            inc TARGET_ADDRH
+L08C4       lda ENDADDRH
+            cmp TARGET_ADDRH
             bmi L08D3
             bne L08D9
             clc
-            lda L00CE
-            cmp L00CC
+            lda ENDADDRL
+            cmp TARGET_ADDR
             bcs L08D9
 L08D3       jsr L08F9
             jsr L0912
-L08D9       cpy L00D0
+L08D9       cpy CNTLEN
             bcc L08B2
             ldy #$7D
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             and #$03
             sta DAUX2
             iny
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             sta DAUX1
             bne L08AA
             lda DAUX2
@@ -238,41 +238,41 @@ L08F9       tya
             jsr L0907
             pla
             tay
-            rts
+DEFINIT     rts
 L0904       jmp (INITAD)
-L0907       lda #$0F
+L0907       lda #.lo(DEFINIT)
             sta INITAD
-            lda #$F0
+            lda #.hi(DEFINIT)
             sta INITAD+1
             rts
-L0912       lda (L0090),Y
-            sta L00CC
+L0912       lda (TARGETBUF),Y
+            sta TARGET_ADDR
             iny
-            lda (L0090),Y
-            sta L00CD
-            lda L00CC
+            lda (TARGETBUF),Y
+            sta TARGET_ADDRH
+            lda TARGET_ADDR
             cmp #$FF
             bne L092B
-            lda L00CD
+            lda TARGET_ADDRH
             cmp #$FF
             bne L092B
             iny
             tya
             bne L0912
 L092B       iny
-            lda (L0090),Y
-            sta L00CE
+            lda (TARGETBUF),Y
+            sta ENDADDRL
             iny
-            lda (L0090),Y
-            sta L00CF
+            lda (TARGETBUF),Y
+            sta ENDADDRH
             iny
             tya
             rts
 L0938       tya
             pha
             ldy #$7F
-            lda (L0090),Y
-            sta L00D0
+            lda (TARGETBUF),Y
+            sta CNTLEN
             pla
             tay
             rts
@@ -280,33 +280,33 @@ L0943       tax
             inx
             jsr L081C
             ldy #$04
-            lda (L0090),Y
+            lda (TARGETBUF),Y
             clc
             adc #$14
 L094F       adc #$28
-            sta L0090
-            lda L0091
+            sta TARGETBUF
+            lda TARGETBUFH
             adc #$00
-            sta L0091
+            sta TARGETBUFH
             clc
-            lda L0090
+            lda TARGETBUF
             dex
             bne L094F
             ldy #$00
-L0961       lda (L0090),Y
+L0961       lda (TARGETBUF),Y
             beq L098A
             cmp #$20
             bcc L096D
             sbc #$C0
             bne L096F
 L096D       adc #$80
-L096F       sta (L0090),Y
+L096F       sta (TARGETBUF),Y
             lda #$A5
             sta AUDC1
             lda #$B0
-            sta L00D0
-L097A       dec L00D0
-            lda L00D0
+            sta CNTLEN
+L097A       dec CNTLEN
+            lda CNTLEN
             sta AUDF1
             beq L098A
             ldx #$60
@@ -316,12 +316,13 @@ L098A       iny
             cpy #$14
             bne L0961
             rts
-            .byte $7D
+WARNING     .byte $7D
             .byte 'WARNING! REMOVE CARTRIDGE for some games'
             .byte $9B
-            .byte 'S:<*> the game box <*>'
+SDEV        .byte 'S:'
+TITLE       .byte 'S:<*> the game box <*>'
             .byte $9B
-            .byte '   SELECT NUMBER'
+SELECT      .byte '   SELECT NUMBER'
             .byte $9B
 ;
 GETK	    LDA $E425
@@ -329,3 +330,4 @@ GETK	    LDA $E425
             LDA $E424
             PHA
             RTS
+END
