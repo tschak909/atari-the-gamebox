@@ -14,12 +14,19 @@ This is a copy of DBM's "THE GAMEBOX TIMEWASTING SYSTEM" an ATARI DOS BINARY FIL
 ## Things that could be improved:
 
 * Add support for both 1050 and double density sector formats.
-* Ability to change title line
 
 ## What was fixed
 
 * Change call to $F6F4 (part-way into KGETCH on ATARI 400/800 OS) to use official GETCH vectors in CIO.
 * Change routine that initializes INITAD to use an address inside the menu that points to an RTS intead of a random RTS in the 400/800 OS.
+
+## What was removed
+
+* The scramble/unscramble feature has been removed from BOXMAKER. It never worked. It's still in the original version, if you'd like to fix it.
+
+## What was added
+
+* The ability to change the disk title. It auto-detects between GBOX0, GBOX1, and GBOX2, and sets the appropriate sector and address offsets.
 
 ## Building
 
@@ -58,3 +65,9 @@ Added file "disk/GBOX1.OBJ"
 Added file "disk/GBOX2.OBJ"
 created image "GAMEBOX.atr"
 ```
+
+## If you change the code
+
+**Please be sure to update the auto-detection code in BOXMAKER at lines 5021 to 5024.**
+
+The code detects the different versions by the very last byte of sector 1. Depending on this, the sector to patch is set in variable SL, and the offset into memory starting at location 1536 is placed in PO. You can use the Altirra debugger to view the contents of $0600 after line 5021 has executed to determine the new byte value.

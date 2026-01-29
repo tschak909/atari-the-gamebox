@@ -320,7 +320,7 @@ WARNING     .byte $7D
             .byte 'WARNING! REMOVE CARTRIDGE for some games'
             .byte $9B
 SDEV        .byte 'S:'
-TITLE       .byte 'S:<*> the game box <*>'
+TITLE       .byte '<*> the game box <*>'
             .byte $9B
 SELECT      .byte '   SELECT NUMBER'
             .byte $9B
